@@ -4,12 +4,13 @@
 #include <windows.h>
 #include <stdio.h>
 #include <io.h>
+#include "Main - Students.h"
 
 //#define TEST_CODE
 
 // Global Variables
 unsigned char gkey[65537];
-unsigned char *gptrKey = gkey;			// used for inline assembly routines, need to access this way for Visual Studio
+unsigned char *gptrKey = gkey;						// used for inline assembly routines, need to access this way for Visual Studio
 char gPassword[256] = "password";
 unsigned char gPasswordHash[32];
 unsigned char *gptrPasswordHash = gPasswordHash;	// used for inline assembly routines, need to access this way for Visual Studio
@@ -112,25 +113,45 @@ EXIT_C_EXAMPLE:					//
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // code to encrypt the data as specified by the project assignment
-void encryptData(char *data, int length)
-{
-	// you can not declare any local variables in C, set up the stack frame and 
-	// assign them in assembly
-	__asm {
+void encryptData(char *data, int length) {
+	int round;
 
-		// you will need to reference these global variables
-		// gptrPasswordHash, gptrKey
+	for (round = 0; round < gNumRounds; round++) {
 
-		// simple example that replaces first byte of data with third byte in teh key filewhich is 0x7A == 'z'
-		mov esi,gptrKey;
-		mov al,[esi+2];		// access 3rd byte in keyfile
-		mov edi,data
-		mov [edi],al
+		__asm {
+			mov eax, test1
+			ror al, 1
+			mov test2, eax
+			ror al, 4
+			mov test3, eax
+			ror al, 6
+			mov test4, eax
+			xor ebx, ebx
+			mov bl, al
+			and bl, 0x0F
+			and al, 0xF0
+			xor edx, edx
+			ror bl, 2
+			mov dl, bl
+			and dl, 0xF0
+			ror dl, 4
+			and bl, 0x0F
+			or dl, bl
+			xor edx, edx
+			ror al, 2
+			mov dl, al
+			and dl, 0x0F
+			ror dl, 4
+			and al, 0xF0
+			or al, dl
+			or al, bl
+			mov test5, eax
+			rol al, 1
+			mov test6, eax
+		}
+
 	}
-
-EXIT_C_ENCRYPT_DATA:
-	return;
-} // encryptData
+}// encryptData
 
 // code to read the file to encrypt
 int encryptFile(FILE *fptrIn, FILE *fptrOut)
@@ -234,7 +255,7 @@ FILE *openOutputFile(char *filename)
 } // openOutputFile
 
 
-void usage(char *argv[])	//   cryptor.exe -e -i <input file> –k <keyfile> -p <password> [–r <#rounds>]
+void usage(char *argv[])	//   cryptor.exe -e -i <input file> â€“k <keyfile> -p <password> [â€“r <#rounds>]
 {
 	printf("\n\nUsage:\n\n");
 	printf("%s -<e=encrypt or d=decrypt> -i <message_filename> -k <keyfile> -p <password> [-r <#rounds>]\n\n", argv[0]);
